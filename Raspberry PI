@@ -1,0 +1,45 @@
+#API 서버 (Flask 설정)
+
+pip install flask
+
+#API 서버 코드 ('app.py')를 작성합니다.
+
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/send_signal', methods=['POST'])
+def send_signal():
+    # 라즈베리 파이에서 전달된 데이터를 처리합니다.
+    data = request.json
+
+    # 여기서 데이터 처리 및 원하는 동작을 수행합니다.
+
+    response = {'message': '전기 신호가 전송되었습니다.', 'data_received': data}
+    return jsonify(response)
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
+
+#라즈베리 파이 API 클라이언트
+
+pip install requests
+
+#라즈베리 파이에서 API 클라이언트 코드
+
+import requests
+import json
+
+url = 'http://API_SERVER_IP:API_SERVER_PORT/send_signal'  # API 서버의 IP 주소 및 포트
+
+data_to_send = {'key1': 'value1', 'key2': 'value2'}  # 전송할 데이터
+
+headers = {'Content-Type': 'application/json'}  # JSON 데이터를 보내기 위한 헤더
+
+response = requests.post(url, data=json.dumps(data_to_send), headers=headers)
+
+if response.status_code == 200:
+    print('API 서버로 데이터 전송 성공!')
+    print('API 서버 응답:', response.json())
+else:
+    print('API 서버로 데이터 전송 실패.')
