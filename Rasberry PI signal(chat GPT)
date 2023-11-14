@@ -1,0 +1,54 @@
+pip install pyRF24
+
+import RF24
+import RPi.GPIO as GPIO
+
+# GPIO 핀 번호 설정 (SPI 인터페이스 사용)
+GPIO.setmode(GPIO.BCM) 
+
+# GPIO 핀 설정(확실하지 않음)
+GPIO.setup(17, GPIO.OUT)  # GPIO 핀 17을 출력 모드로 설정
+GPIO.setup(18, GPIO.IN)   # GPIO 핀 18을 입력 모드로 설정
+
+# GPIO 핀에 신호 출력
+GPIO.output(17, GPIO.HIGH)  # GPIO 핀 17에 HIGH (3.3V) 출력
+GPIO.output(17, GPIO.LOW)   # GPIO 핀 17에 LOW (0V) 출력
+
+# GPIO 핀에서 입력 읽기(확실하지 않음)
+input_value = GPIO.input(18)  # GPIO 핀 18의 입력 상태를 읽음
+if input_value == GPIO.HIGH:
+    print("GPIO 18 is HIGH")
+else:
+    print("GPIO 18 is LOW")
+
+
+# GpIO 는 CEPINH GHPIO.BCM은 CSNPIN인듯? 
+radio = RF24.RF24(GPIO, GPIO.BCM) 
+
+# NRF24L01 모듈 설정
+radio.begin()
+radio.openReadingPipe(1, b"1Node")  # 수신 주소 설정
+radio.openWritingPipe(b"2Node")  # 송신 주소 설정 (재전송)
+radio.setChannel(0x76)  # 채널 설정
+radio.startListening()  # 수신 모드로 설정
+
+try:
+    while True:
+        # 데이터 수신
+        if radio.available():
+            received_message = []
+            radio.read(received_message)
+            message = b''.join(received_message).decode('utf-8')
+            print(f"Received: {message}")
+
+            # 수신된 데이터 다시 송신
+            radio.stopListening()  # 송신 모드로 전환
+            radio.write(received_message)
+            radio.startListening()  # 수신 모드로 다시 전환
+
+except KeyboardInterrupt:
+    print("Interrupted")
+
+finally:
+    radio.powerDown()
+    GPIO.cleanup()
