@@ -1,0 +1,42 @@
+import spidev
+import RPi.GPIO as GPIO
+from lib_nrf24 import NRF24
+
+# Set CE and CSN pins
+CEPIN = 9
+CSNPIN = 10
+
+# Set the address to communicate with
+ADDRESS = [0xF0, 0xF0, 0xF0, 0xE1]
+
+# Create an instance of the NRF24 class
+radio = NRF24()
+
+# Create an SPI object
+spi = spidev.SpiDev()
+spi.open(0, 0)
+spi.max_speed_hz = 50000
+
+# Initialize the radio
+radio.begin(CEPIN, CSNPIN)
+radio.setPayloadSize(32)
+radio.setChannel(0)
+radio.setDataRate(NRF24.BR_1MBPS)
+radio.setPALevel(NRF24.PA_LOW)
+radio.setAutoAck(True)
+radio.enableDynamicPayloads()
+radio.enableAckPayload()
+radio.openReadingPipe(1, ADDRESS)
+radio.startListening()
+
+try:
+    while True:
+        if radio.available():
+            firedetection = False
+            radio.read(firedetection, sizeof(firedetection))
+            print(f"Firedetection: {firedetection}")
+            time.sleep(1)
+
+except KeyboardInterrupt:
+    spi.close()
+    GPIO.cleanup()
