@@ -1,0 +1,34 @@
+import requests
+
+# Constants
+APP_KEY = "YOUR_APP_KEY"
+REFRESH_TOKEN = "YOUR_REFRESH_TOKEN"
+ssid = "YOUR_WIFI_SSID"
+password = "YOUR_WIFI_PASSWORD"
+host = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
+
+# Initialize
+access_token = None
+
+# Setup
+print("\n\n")
+print("+-----------------------------------------------------+")
+print("| Send Message to ME from ESP32 using KaKao Open API |")
+print("+-----------------------------------------------------+")
+print("\n")
+
+# WiFi setup
+print("Connecting to WiFi Network !!")
+# Assuming you have previously connected to WiFi in your ESP32 code
+# and obtained the local IP address.
+
+# Simulate waiting for WiFi connection (replace this with your actual code)
+import time
+while True:
+    if True:  # Replace with your WiFi connection status check
+        break
+    print(".")
+    time.sleep(0.5)
+
+print("\nConnected to WiFi network with IP Address: YOUR_IP_ADDRESS")
+print("+-----------------------------------------------------+")
