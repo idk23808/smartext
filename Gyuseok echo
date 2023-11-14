@@ -1,0 +1,41 @@
+import time
+import spidev
+from lib_nrf24 import NRF24
+
+# Create an instance of the NRF24 class
+radio = NRF24()
+
+# Set the address to communicate with
+address = [0xF0, 0xF0, 0xF0, 0xE1]
+
+# Set the channel
+channel = 0x76
+
+# Create an SPI object
+spi = spidev.SpiDev()
+spi.open(0, 0)
+spi.max_speed_hz = 50000
+
+# Begin the radio
+radio.begin(0, 17)  # Set CE and CSN pins
+radio.setPayloadSize(32)
+radio.setChannel(channel)
+radio.setDataRate(NRF24.BR_1MBPS)
+radio.setPALevel(NRF24.PA_LOW)
+radio.setAutoAck(True)
+radio.enableDynamicPayloads()
+radio.enableAckPayload()
+radio.openWritingPipe(address)
+radio.stopListening()  # Set as transmitter
+
+try:
+    while True:
+        firedetection = True  # Set the fire detection flag
+
+        # Send the data
+        radio.write(bytes([int(firedetection)]))
+
+        time.sleep(1)  # Delay for 1 second
+
+except KeyboardInterrupt:
+    spi.close()
