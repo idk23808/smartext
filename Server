@@ -32,6 +32,142 @@ void loop() {
 }
 #PushBullet
 
+if(currentFirestate) {
+  #include <Arduino_LSM6DS3.h>
+
+#include <SPI.h>
+
+#include <WiFiNINA.h>
+
+#include "utility/wifi_drv.h"
+
+ 
+
+#define DEVICEID      "v51550220E395C84"
+
+ 
+
+const char* ssid = "kim&park";        // WiFi의 SSID 입니다.
+
+const char* pass = "01071128287"; // 비번입니다.
+
+const char* server = "api.pushingbox.com";
+
+ 
+
+int status = WL_IDLE_STATUS;
+
+ 
+
+ 
+
+void setup() {
+
+//시리얼 통신 시작
+
+  Serial.begin(9600);
+
+ 
+
+
+  }
+
+ 
+
+// 와이파이 연결시도
+
+  int status = WL_IDLE_STATUS;     // the Wifi radio's status
+
+  WiFiClient client;
+
+ 
+
+  while (status != WL_CONNECTED) {
+
+    Serial.print("Attempting to connect to WPA SSID: ");
+
+    Serial.println(ssid);
+
+    // Connect to WPA/WPA2 network:
+
+    status = WiFi.begin(ssid, pass);
+
+    // wait 10 seconds for connection:
+
+    delay(10000);
+
+  }
+
+  // you're connected now, so print out the data:
+
+  Serial.println("You're connected to the network");
+
+}
+
+ 
+
+void loop()
+
+{
+
+ 
+
+  if (IMU.accelerationAvailable()) {
+
+    IMU.readAcceleration(acc_x, acc_y, acc_z);
+
+    float g = sqrt(acc_x * acc_x + acc_y * acc_y + acc_z * acc_z);
+
+      if( g > 1.5){
+
+        Serial.println("가속도 값이 1.5G를 넘었습니다.");
+
+        wifiMode();
+
+     }
+
+  }
+
+}
+
+ 
+
+ 
+
+void wifiMode(){
+
+  WiFiClient client;  
+
+ 
+
+  if (client.connect(server, 80)) {
+
+    // send the HTTP PUT request
+
+    client.print(F("GET /pushingbox?devid="));
+
+    client.print(DEVICEID);
+
+    client.print(F(" HTTP/1.1\r\n"));
+
+    client.print(F("Host: api.pushingbox.com\r\n"));
+
+    client.print(F("User-Agent: Arduino\r\n"));
+
+    client.print(F("\r\n\r\n"));
+
+  }
+
+  else {
+
+    // if you couldn't make a connection
+
+    Serial.println("Connection failed");
+
+  }
+
+}
+}
 
 #echo
 
