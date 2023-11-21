@@ -6,151 +6,32 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 
-//NRF24와 연결할 핀을 연결할 코드이다.
-//9번 핀은 CE, 10번 핀은 CSN, 11번 핀은 MOSI, 12번 핀은 MISO, 13번 핀은 SCK
-//NRF 모듈이 외부 간섭으로 부터 신호가 불안정할 경우 VCC, GND에 10uF 연결
-
 #define CEPIN 9
 #define CSNPIN 10
-
-//ADDRESS는 NRF 모듈의 통신 주소이다. 송 수신 모두 동일한 값이어야함.
 #define ADDRESS 0xF0F0F0E1LL
 
-RF24 radio(CEPIN, CSNPIN); // CE, CSN 핀 설정
-
-//화재 감지기로부터 화재 감지 여부를 전달받는 함수
-bool RECEIVE_ALERT(float RECEIVE_FREQ, bool SPEAKER_SWITCH){
-  bool firedetection = false;   //firedetection 값 초기화
-  static unsigned long receive_prevmillis = 0;
-  const unsigned long receive_delaymillis = RECEIVE_FREQ;
-  static bool receive_state = 0;
-
-  unsigned long receive_currmillis = millis();
-
-  if(SPEAKER_SWITCH && radio.available()){
-    if(receive_currmillis - receive_prevmillis >= receive_delaymillis){
-      receive_prevmillis = receive_currmillis;
-      radio.read(&firedetection, sizeof(firedetection));Serial.println(firedetection);return firedetection;}}else{}
-}
-
-#PushBullet
-
-#include <ESP8266WiFi.h>
-
-#ifndef STASSID
-#define STASSID ""
-#define STAPSK  ""
-#endif
-
-#define DEVICEID  ""
-
-const char* ssid     = STASSID;
-const char* password = STAPSK;
-
-int status = WL_IDLE_STATUS;       // the Wifi radio's status
-
-char server[] = "api.pushingbox.com";
-
-unsigned long lastConnectionTime = 0;         // last time you connected to the server, in milliseconds
-const unsigned long postingInterval = 5000L; // delay between updates, in milliseconds
-
-boolean getIsConnected = false;
-
-String rcvbuf;
-
-// Initialize the 
-
-WiFiClient client;
-
-void httpRequest();
-void printWifiStatus();
+RF24 radio(CEPIN, CSNPIN);
 
 void setup() {
-  Serial.begin(115200);
-
-  // We start by connecting to a WiFi network
-
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  /* Explicitly set the ESP8266 to be a WiFi-client, otherwise, it by default,
-     would try to act as both a client and an access-point and could cause
-     network-issues with your other WiFi-devices on your WiFi-network. */
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-
-
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.begin(9600);
+  radio.begin();
+  radio.openReadingPipe(0, ADDRESS);
+  radio.setPALevel(RF24_PA_MAX);
+  radio.startListening();
+  pinMode(A0, OUTPUT);
+  pinMode(8, OUTPUT);
 }
-
-
-
 
 void loop() {
 
-while (client.available()) {
-    char c = client.read();
-    if ( c != NULL ) {
-      if (rcvbuf.length() > 20)
-        rcvbuf = "";
-      rcvbuf += c;
-      Serial.write(c);
-    }
-  }
-  // if 5 seconds have passed since your last connection,
-  // then connect again and send data
-  if (millis() - lastConnectionTime > postingInterval) {
-    
-      httpRequest();
-    
-  }
-  rcvbuf = "";
+  if (radio.available()) {
+    bool currentFireState;
+    radio.read(&currentFireState, sizeof(currentFireState));
+    Serial.println(currentFireState);
 
 }
+#PushBullet
 
-
-// this method makes a HTTP connection to the server
-void httpRequest() {
-  Serial.println();
-
-  // close any connection before send a new request
-  // this will free the socket on the WiFi shield
-  client.stop();
-
-  // if there's a successful connection
-  if (client.connect(server, 80)) {
-    Serial.println("Connecting...");
-
-    // send the HTTP PUT request
-    client.print(F("GET /pushingbox?devid="));
-    client.print(DEVICEID);
-    client.print(F(" HTTP/1.1\r\n"));
-    client.print(F("Host: api.pushingbox.com\r\n"));
-    client.print(F("User-Agent: Arduino\r\n"));
-    client.print(F("\r\n\r\n"));
-
-    // note the time that the connection was made
-    lastConnectionTime = millis();
-    getIsConnected = true;
-  }
-  else {
-    // if you couldn't make a connection
-    Serial.println("Connection failed");
-    getIsConnected = false;
-  }
-}
 
 #echo
 
